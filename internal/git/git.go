@@ -108,12 +108,12 @@ func CreateTag(p projectid.Project, push bool) (string, error) {
 	}
 
 	tagName := "v" + v.String()
-	if err := Run(p.WorkDir(), "tag", tagName); err != nil {
+	if err := Run(p.WorkDir(), "tag", "-f", tagName); err != nil {
 		return "", err
 	}
 
 	if push {
-		if err := Run(p.WorkDir(), "push", "--force", "origin", tagName); err != nil {
+		if err := Run(p.WorkDir(), "push", "--tags", "--force"); err != nil {
 			return "", err
 		}
 	}
