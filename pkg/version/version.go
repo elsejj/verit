@@ -12,6 +12,24 @@ const KEEP = -2
 // / Special constants indicating should increase current version by 1
 const INCREASE = -1
 
+func ParseVersionNumber(s string) (int, error) {
+	switch strings.ToUpper(s) {
+	case "KEEP":
+		return KEEP, nil
+	case "INC":
+		return INCREASE, nil
+	default:
+		n, err := strconv.Atoi(s)
+		if err != nil {
+			return 0, fmt.Errorf("invalid version number: %s", s)
+		}
+		if n < 0 {
+			return 0, fmt.Errorf("version number must be non-negative: %s", s)
+		}
+		return n, nil
+	}
+}
+
 type Version struct {
 	Major int
 	Minor int
@@ -27,8 +45,11 @@ func parseInt(s string) int {
 	return i
 }
 
-func Parse(s string) *Version {
+func Parse(s string) (*Version, error) {
 	a := strings.Split(s, ".")
+	if len(a) < 3 {
+		return nil, fmt.Errorf("`%s` is invalid version format", s)
+	}
 	v := Version{}
 	for i, s := range a {
 		switch i {
@@ -42,21 +63,24 @@ func Parse(s string) *Version {
 			v.Build = s
 		}
 	}
-	return &v
+	return &v, nil
 }
 
 func (v *Version) String() string {
-	return fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch)
-}
-
-func (v *Version) FullVersion() string {
-	return fmt.Sprintf("%d.%d.%d.%s", v.Major, v.Minor, v.Patch, v.Build)
+	if v.Build != "" {
+		return fmt.Sprintf("%d.%d.%d.%s", v.Major, v.Minor, v.Patch, v.Build)
+	} else {
+		return fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch)
+	}
 }
 
 func (v *Version) BumpMajor(ver int) {
+	if ver == KEEP {
+		return
+	}
 	if ver == INCREASE {
 		v.Major++
-	} else if ver != KEEP && ver >= 0 {
+	} else if ver >= 0 {
 		v.Major = ver
 	}
 	v.Minor = 0
@@ -64,18 +88,24 @@ func (v *Version) BumpMajor(ver int) {
 }
 
 func (v *Version) BumpMinor(ver int) {
+	if ver == KEEP {
+		return
+	}
 	if ver == INCREASE {
 		v.Minor++
-	} else if ver != KEEP && ver >= 0 {
+	} else if ver >= 0 {
 		v.Minor = ver
 	}
 	v.Patch = 0
 }
 
 func (v *Version) BumpPatch(ver int) {
+	if ver == KEEP {
+		return
+	}
 	if ver == INCREASE {
 		v.Patch++
-	} else if ver != KEEP && ver >= 0 {
+	} else if ver >= 0 {
 		v.Patch = ver
 	}
 }

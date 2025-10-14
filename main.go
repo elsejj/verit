@@ -1,8 +1,9 @@
 package main
 
 import (
-	"flag"
 	"fmt"
+
+	flag "github.com/spf13/pflag"
 
 	"github.com/elsejj/verit/pkg/projectid"
 	"github.com/elsejj/verit/pkg/version"
@@ -10,44 +11,41 @@ import (
 	_ "embed"
 )
 
-var flagVersion string
-var flagVerbose bool
 var flagBuild string
 var flagWorkDir string
-var flagHelp bool
+var flagSetVersion string
 var flagShowVersion bool
-var flagBumpMajor = version.KEEP
-var flagBumpMinor = version.KEEP
-var flagBumpPatch = version.KEEP
+var flagBumpMajor string
+var flagBumpMinor string
+var flagBumpPatch string
+var flagHelp bool
+var flagVerbose bool
 
 //go:embed version.txt
 var ver string
 
 func initFlags() {
-	flag.StringVar(&flagVersion, "v", "", "version to set (shorthand)")
-	flag.StringVar(&flagVersion, "version", "", "version to set")
 
-	flag.BoolVar(&flagVerbose, "vv", false, "verbose output(shorthand)")
 	flag.BoolVar(&flagVerbose, "verbose", false, "verbose output")
 
-	flag.IntVar(&flagBumpMajor, "M", version.INCREASE, "bump major version, default -1 for increase current major by 1 (shorthand)")
-	flag.IntVar(&flagBumpMajor, "major", version.INCREASE, "bump major version")
+	flag.StringVarP(&flagBumpMajor, "major", "M", "KEEP", "bump major version, no argument value to increase current major by 1")
 
-	flag.IntVar(&flagBumpMinor, "m", version.INCREASE, "bump minor version, default -1 for increase current minor by 1 (shorthand)")
-	flag.IntVar(&flagBumpMinor, "minor", version.INCREASE, "bump minor version")
+	flag.StringVarP(&flagBumpMinor, "minor", "m", "KEEP", "bump minor version, no argument value to increase current minor by 1")
 
-	flag.IntVar(&flagBumpPatch, "p", version.INCREASE, "bump patch version, default -1 for increase current patch by 1 (shorthand)")
-	flag.IntVar(&flagBumpPatch, "patch", version.INCREASE, "bump patch version")
+	flag.StringVarP(&flagBumpPatch, "patch", "p", "KEEP", "bump patch version, no argument value to increase current patch by 1")
 
-	flag.StringVar(&flagBuild, "b", "", "set build version (shorthand)")
-	flag.StringVar(&flagBuild, "build", "", "set build version")
+	flag.StringVarP(&flagBuild, "build", "b", "", "set build version")
 
-	flag.StringVar(&flagWorkDir, "d", "", "work directory (shorthand)")
-	flag.StringVar(&flagWorkDir, "dir", "", "work directory")
+	flag.StringVarP(&flagWorkDir, "work-dir", "w", "", "work directory of the project, default to current directory")
 
-	flag.BoolVar(&flagHelp, "h", false, "show help (shorthand)")
+	flag.BoolVarP(&flagHelp, "help", "h", false, "show help (shorthand)")
 
-	flag.BoolVar(&flagShowVersion, "V", false, "show version (shorthand)")
+	flag.StringVarP(&flagSetVersion, "set-version", "V", "", "version to set, like 1.2.3")
+	flag.BoolVarP(&flagShowVersion, "version", "v", false, "show version")
+
+	flag.Lookup("major").NoOptDefVal = "INC"
+	flag.Lookup("minor").NoOptDefVal = "INC"
+	flag.Lookup("patch").NoOptDefVal = "INC"
 
 	flag.Parse()
 }
@@ -55,11 +53,6 @@ func initFlags() {
 func main() {
 
 	initFlags()
-
-	if flagShowVersion {
-		fmt.Println(ver)
-		return
-	}
 
 	if flagHelp {
 		showHelp()
@@ -76,8 +69,17 @@ func main() {
 
 	p := id.Project(workdir)
 
-	if len(flagVersion) > 0 {
-		v := version.Parse(flagVersion)
+	if flagShowVersion {
+		showVersion(p)
+		return
+	}
+
+	if len(flagSetVersion) > 0 {
+		v, err := version.Parse(flagSetVersion)
+		if err != nil {
+			fmt.Println("invalid version:", err)
+			return
+		}
 		setVersion(p, v)
 	} else {
 		changed := bumpVersion(p)
@@ -86,15 +88,18 @@ func main() {
 			setBuildVersion(p)
 		}
 		if changed {
-			fmt.Println("version changed")
+			if flagVerbose {
+				fmt.Println("version changed")
+			}
 		}
 		showVersion(p)
 	}
 }
 
 func showHelp() {
-	fmt.Printf("verit (%s) - manage project version", ver)
-	fmt.Println("verit [options]")
+	fmt.Println("verit - manage project version")
+	fmt.Println("version:", ver)
+	fmt.Println("usage: verit [options]")
 	fmt.Println("options:")
 	flag.PrintDefaults()
 }
@@ -108,13 +113,38 @@ func bumpVersion(p projectid.Project) bool {
 		v = &version.Version{}
 	}
 
-	v.BumpMajor(flagBumpMajor)
-	v.BumpMinor(flagBumpMinor)
-	v.BumpPatch(flagBumpPatch)
+	major, err := version.ParseVersionNumber(flagBumpMajor)
+	if err != nil {
+		fmt.Println("invalid major version:", err)
+		return false
+	}
+
+	minor, err := version.ParseVersionNumber(flagBumpMinor)
+	if err != nil {
+		fmt.Println("invalid minor version:", err)
+		return false
+	}
+
+	patch, err := version.ParseVersionNumber(flagBumpPatch)
+	if err != nil {
+		fmt.Println("invalid patch version:", err)
+		return false
+	}
+
+	if major == version.KEEP && minor == version.KEEP && patch == version.KEEP {
+		if flagVerbose {
+			fmt.Println("no version change")
+		}
+		return false
+	}
+
+	v.BumpMajor(major)
+	v.BumpMinor(minor)
+	v.BumpPatch(patch)
 
 	setVersion(p, v)
 
-	return flagBumpMajor != version.KEEP || flagBumpMinor != version.KEEP || flagBumpPatch != version.KEEP
+	return true
 }
 
 func setBuildVersion(p projectid.Project) {

@@ -2,7 +2,6 @@ package projectid
 
 import (
 	"os"
-	"path"
 
 	"github.com/elsejj/verit/pkg/version"
 )
@@ -41,10 +40,4 @@ func Which(workdir string) ProjectID {
 		}
 	}
 	return 0
-}
-
-func fileExists(paths ...string) bool {
-	fName := path.Join(paths...)
-	_, err := os.Stat(fName)
-	return err == nil
 }
