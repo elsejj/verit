@@ -221,20 +221,21 @@ func createGitTag(p projectid.Project) error {
 }
 
 func ensureCleanGit(dir string) error {
-	cmd := exec.Command("git", "status", "--porcelain")
-	cmd.Dir = dir
-	out, err := cmd.Output()
+	err := gitCheckModified(dir)
 	if err != nil {
-		if ee, ok := err.(*exec.ExitError); ok {
-			return fmt.Errorf("git status failed: %s", strings.TrimSpace(string(ee.Stderr)))
+		return err
+	}
+
+	if flagGitTagPush {
+		err = gitCheckPushed(dir)
+		if err != nil {
+			return err
 		}
-		return fmt.Errorf("git status failed: %w", err)
 	}
+	return nil
+}
 
-	if len(bytes.TrimSpace(out)) > 0 {
-		return fmt.Errorf("git working tree has uncommitted changes")
-	}
-
+func gitCheckPushed(dir string) error {
 	branchCmd := exec.Command("git", "status", "--porcelain=v2", "--branch")
 	branchCmd.Dir = dir
 	branchOut, err := branchCmd.Output()
@@ -283,7 +284,23 @@ func ensureCleanGit(dir string) error {
 			break
 		}
 	}
+	return nil
+}
 
+func gitCheckModified(dir string) error {
+	cmd := exec.Command("git", "status", "--porcelain")
+	cmd.Dir = dir
+	out, err := cmd.Output()
+	if err != nil {
+		if ee, ok := err.(*exec.ExitError); ok {
+			return fmt.Errorf("git status failed: %s", strings.TrimSpace(string(ee.Stderr)))
+		}
+		return fmt.Errorf("git status failed: %w", err)
+	}
+
+	if len(bytes.TrimSpace(out)) > 0 {
+		return fmt.Errorf("git working tree has uncommitted changes")
+	}
 	return nil
 }
 
