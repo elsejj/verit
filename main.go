@@ -14,7 +14,7 @@ import (
 var flagBuild string
 var flagWorkDir string
 var flagSetVersion string
-var flagShowVersion bool
+var flagAppVersion bool
 var flagBumpMajor string
 var flagBumpMinor string
 var flagBumpPatch string
@@ -40,8 +40,8 @@ func initFlags() {
 
 	flag.BoolVarP(&flagHelp, "help", "h", false, "show help (shorthand)")
 
-	flag.StringVarP(&flagSetVersion, "set-version", "V", "", "version to set, like 1.2.3")
-	flag.BoolVarP(&flagShowVersion, "version", "v", false, "show version")
+	flag.StringVarP(&flagSetVersion, "version", "v", "", "version to set, like 1.2.3")
+	flag.BoolVarP(&flagAppVersion, "app-version", "V", false, "show app version")
 
 	flag.Lookup("major").NoOptDefVal = "INC"
 	flag.Lookup("minor").NoOptDefVal = "INC"
@@ -59,6 +59,11 @@ func main() {
 		return
 	}
 
+	if flagAppVersion {
+		fmt.Printf("v%s\n", ver)
+		return
+	}
+
 	workdir := projectid.Pwd()
 
 	if len(flagWorkDir) > 0 {
@@ -68,11 +73,6 @@ func main() {
 	id := projectid.Which(workdir)
 
 	p := id.Project(workdir)
-
-	if flagShowVersion {
-		showVersion(p)
-		return
-	}
 
 	if len(flagSetVersion) > 0 {
 		v, err := version.Parse(flagSetVersion)
@@ -92,8 +92,8 @@ func main() {
 				fmt.Println("version changed")
 			}
 		}
-		showVersion(p)
 	}
+	showVersion(p)
 }
 
 func showHelp() {

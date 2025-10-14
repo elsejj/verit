@@ -33,7 +33,7 @@ func (p *PythonProject) WorkDir() string {
 	return p.workdir
 }
 
-var pythonVersionRE = regexp.MustCompile(`^\s*version\s*=\s*"(.+)"`)
+var pythonVersionRE = regexp.MustCompile(`\s*version\s*=\s*"(.+)"`)
 
 func (p *PythonProject) GetVersion() (*version.Version, error) {
 	v, err := utils.Grep(p.versionFile(), pythonVersionRE)

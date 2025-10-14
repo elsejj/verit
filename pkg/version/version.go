@@ -46,6 +46,9 @@ func parseInt(s string) int {
 }
 
 func Parse(s string) (*Version, error) {
+	s = strings.TrimSpace(strings.TrimLeftFunc(s, func(r rune) bool {
+		return r == 'V' || r == 'v'
+	}))
 	a := strings.Split(s, ".")
 	if len(a) < 3 {
 		return nil, fmt.Errorf("`%s` is invalid version format", s)

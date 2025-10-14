@@ -33,7 +33,7 @@ func (p *NodeProject) WorkDir() string {
 	return p.workdir
 }
 
-var nodeVersionRE = regexp.MustCompile(`^\s*"version"\s*:\s*"(.+)"`)
+var nodeVersionRE = regexp.MustCompile(`"version"\s*:\s*"(.+)"`)
 
 func (p *NodeProject) GetVersion() (*version.Version, error) {
 	v, err := utils.Grep(p.versionFile(), nodeVersionRE)

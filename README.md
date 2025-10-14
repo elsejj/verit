@@ -21,10 +21,27 @@ $ verit -m
 $ verit -p
 ```
 
+## bump to specific version
+
+```bash
+# bump major version to 2
+$ verit -M=2
+# bump minor version to 3
+$ verit -m=3
+# bump patch version to 4
+$ verit -p=4
+```
+
 ## set project version
 
 ```bash
-$ verit -v 1.2.3
+$ verit -V 1.2.3
+```
+
+## show project version
+
+```bash
+$ verit
 ```
 
 # Implementation
@@ -60,3 +77,30 @@ for python project, `verit` will use `pyproject.toml` to manage version,
 # Node Project
 
 for node project, `verit` will use `package.json` to manage version,
+
+# Rust Project
+
+for rust project, `verit` will use `Cargo.toml` to manage version,
+
+rust project may have multiple crates, `verit` will only manage the crate in the current working directory.
+
+if you want to unify version for all crates, you can set the version in the workspace `Cargo.toml`, like:
+
+```toml
+[workspace]
+members = [
+    "crate1",
+    "crate2",
+]
+
+[workspace.package]
+version = "1.2.3"
+```
+
+then in each crate `Cargo.toml`, you can inherit the version from workspace, like:
+
+```toml
+[package]
+name = "crate1"
+version.workspace = true
+```
