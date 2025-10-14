@@ -4,18 +4,24 @@ import (
 	"flag"
 	"fmt"
 
-	pv "github.com/elsejj/verit/internal/version"
 	"github.com/elsejj/verit/pkg/projectid"
 	"github.com/elsejj/verit/pkg/version"
+
+	_ "embed"
 )
 
 var flagVersion string
 var flagVerbose bool
-var flagBump int = 0
 var flagBuild string
 var flagWorkDir string
 var flagHelp bool
 var flagShowVersion bool
+var flagBumpMajor = version.KEEP
+var flagBumpMinor = version.KEEP
+var flagBumpPatch = version.KEEP
+
+//go:embed version.txt
+var ver string
 
 func initFlags() {
 	flag.StringVar(&flagVersion, "v", "", "version to set (shorthand)")
@@ -24,9 +30,16 @@ func initFlags() {
 	flag.BoolVar(&flagVerbose, "vv", false, "verbose output(shorthand)")
 	flag.BoolVar(&flagVerbose, "verbose", false, "verbose output")
 
-	flag.IntVar(&flagBump, "b", 0, "bump version (shorthand)")
-	flag.IntVar(&flagBump, "bump", 0, "bump version")
+	flag.IntVar(&flagBumpMajor, "M", version.INCREASE, "bump major version, default -1 for increase current major by 1 (shorthand)")
+	flag.IntVar(&flagBumpMajor, "major", version.INCREASE, "bump major version")
 
+	flag.IntVar(&flagBumpMinor, "m", version.INCREASE, "bump minor version, default -1 for increase current minor by 1 (shorthand)")
+	flag.IntVar(&flagBumpMinor, "minor", version.INCREASE, "bump minor version")
+
+	flag.IntVar(&flagBumpPatch, "p", version.INCREASE, "bump patch version, default -1 for increase current patch by 1 (shorthand)")
+	flag.IntVar(&flagBumpPatch, "patch", version.INCREASE, "bump patch version")
+
+	flag.StringVar(&flagBuild, "b", "", "set build version (shorthand)")
 	flag.StringVar(&flagBuild, "build", "", "set build version")
 
 	flag.StringVar(&flagWorkDir, "d", "", "work directory (shorthand)")
@@ -44,7 +57,7 @@ func main() {
 	initFlags()
 
 	if flagShowVersion {
-		fmt.Println(pv.Version)
+		fmt.Println(ver)
 		return
 	}
 
@@ -67,11 +80,8 @@ func main() {
 		v := version.Parse(flagVersion)
 		setVersion(p, v)
 	} else {
-		changed := false
-		if flagBump > 0 {
-			bumpVersion(p)
-			changed = true
-		} else if len(flagBuild) > 0 {
+		changed := bumpVersion(p)
+		if len(flagBuild) > 0 {
 			changed = true
 			setBuildVersion(p)
 		}
@@ -83,13 +93,13 @@ func main() {
 }
 
 func showHelp() {
-	fmt.Printf("verit (%s) - manage project version", pv.Version)
+	fmt.Printf("verit (%s) - manage project version", ver)
 	fmt.Println("verit [options]")
 	fmt.Println("options:")
 	flag.PrintDefaults()
 }
 
-func bumpVersion(p projectid.Project) {
+func bumpVersion(p projectid.Project) bool {
 	v, err := p.GetVersion()
 	if err != nil {
 		if flagVerbose {
@@ -98,18 +108,13 @@ func bumpVersion(p projectid.Project) {
 		v = &version.Version{}
 	}
 
-	switch flagBump {
-	case 1:
-		v.BumpMajor()
-	case 2:
-		v.BumpMinor()
-	case 3:
-		v.BumpPatch()
-	default:
-		fmt.Println("invalid bump version type: ", flagBump)
-		return
-	}
+	v.BumpMajor(flagBumpMajor)
+	v.BumpMinor(flagBumpMinor)
+	v.BumpPatch(flagBumpPatch)
+
 	setVersion(p, v)
+
+	return flagBumpMajor != version.KEEP || flagBumpMinor != version.KEEP || flagBumpPatch != version.KEEP
 }
 
 func setBuildVersion(p projectid.Project) {
