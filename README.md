@@ -14,11 +14,11 @@ $ verit
 
 ```bash
 # bump major version
-$ verit -b 1
+$ verit -M
 # bump minor version
-$ verit -b 2
+$ verit -m
 # bump patch version
-$ verit -b 3
+$ verit -p
 ```
 
 ## set project version
@@ -35,7 +35,23 @@ for some language project, it has no way to manage version, `verit` will do it f
 
 # Go Project
 
-for go project, `verit` will use a generated file to manage version, the generated file is `internal/version/version.go`
+For go project, `verit` will lookup `version.txt` file to manage version, if not exist, will give up.
+if you want to use `verit` to manage go project version, you need to create a `version.txt` and put version like `1.2.3` in it. then use `go:embed` directive to embed it to a go variable.
+
+For example:
+
+```go
+package main
+import (
+  _ "embed"
+  "fmt"
+)
+//go:embed version.txt
+var version string
+func main() {
+  fmt.Println("version:", version)
+}
+```
 
 # Python Project
 
@@ -44,4 +60,3 @@ for python project, `verit` will use `pyproject.toml` to manage version,
 # Node Project
 
 for node project, `verit` will use `package.json` to manage version,
-
