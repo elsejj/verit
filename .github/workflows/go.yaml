@@ -41,3 +41,5 @@ jobs:
             dist/linux/verit-linux-amd64.tar.gz
             dist/mac/verit-darwin-arm64.tar.gz
             dist/win/verit-windows-amd64.zip
+          body: ${{ steps.changelog_reader.outputs.content }}
+          make_latest: true
