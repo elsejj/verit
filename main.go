@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os/exec"
+	"strconv"
 	"strings"
 
 	flag "github.com/spf13/pflag"
@@ -233,6 +234,56 @@ func ensureCleanGit(dir string) error {
 	if len(bytes.TrimSpace(out)) > 0 {
 		return fmt.Errorf("git working tree has uncommitted changes")
 	}
+
+	branchCmd := exec.Command("git", "status", "--porcelain=v2", "--branch")
+	branchCmd.Dir = dir
+	branchOut, err := branchCmd.Output()
+	if err != nil {
+		if ee, ok := err.(*exec.ExitError); ok {
+			return fmt.Errorf("git status --branch failed: %s", strings.TrimSpace(string(ee.Stderr)))
+		}
+		return fmt.Errorf("git status --branch failed: %w", err)
+	}
+
+	var (
+		upstreamFound bool
+		upstreamName  string
+	)
+
+	for _, line := range strings.Split(string(branchOut), "\n") {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "# branch.upstream") {
+			fields := strings.Fields(line)
+			if len(fields) >= 3 {
+				upstreamName = fields[2]
+			}
+			upstreamFound = true
+			continue
+		}
+
+		if !upstreamFound {
+			continue
+		}
+
+		if strings.HasPrefix(line, "# branch.ab") {
+			fields := strings.Fields(line)
+			if len(fields) < 4 {
+				continue
+			}
+			aheadCount, err := strconv.Atoi(strings.TrimPrefix(fields[2], "+"))
+			if err != nil {
+				continue
+			}
+			if aheadCount > 0 {
+				if upstreamName == "" {
+					upstreamName = "@{u}"
+				}
+				return fmt.Errorf("git branch is ahead of %s by %d commit(s); push your changes first", upstreamName, aheadCount)
+			}
+			break
+		}
+	}
+
 	return nil
 }
 
