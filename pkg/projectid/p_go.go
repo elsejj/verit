@@ -10,12 +10,23 @@ import (
 	"github.com/elsejj/verit/pkg/version"
 )
 
+/*
+GoProject represents a Go project with versioning capabilities
+Because Go projects do not have a standard version file, we flow the rules below:
+  - lookup the project by checking the existence of "version.txt"
+  - this file can be embedded to a go variable use `go:embed` directive
+  - the file content should be like `x.y.z`
+*/
 type GoProject struct {
 	workdir string
 }
 
+func isGo(workdir string) bool {
+	return fileExists(path.Join(workdir, "go.mod"))
+}
+
 func (p *GoProject) IsMe(workdir string) bool {
-	return isNode(workdir)
+	return isGo(workdir)
 }
 
 func (p *GoProject) ID() ProjectID {

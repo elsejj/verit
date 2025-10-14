@@ -7,11 +7,17 @@ import (
 	"github.com/elsejj/verit/pkg/version"
 )
 
+// Project represents a generic project with versioning capabilities
 type Project interface {
+	// Test if the project is of the specified type
 	IsMe(workdir string) bool
+	// Get the project ID
 	ID() ProjectID
+	// Get the working directory of the project
 	WorkDir() string
+	// Get the current version of the project
 	GetVersion() (*version.Version, error)
+	// Set a new version for the project
 	SetVersion(v *version.Version) error
 }
 
@@ -38,19 +44,7 @@ func Which(workdir string) ProjectID {
 }
 
 func fileExists(paths ...string) bool {
-	fname := path.Join(paths...)
-	_, err := os.Stat(fname)
+	fName := path.Join(paths...)
+	_, err := os.Stat(fName)
 	return err == nil
-}
-
-func isNode(workdir string) bool {
-	return fileExists(workdir, "package.json")
-}
-
-func isPython(workdir string) bool {
-	return fileExists(workdir, "pyproject.toml")
-}
-
-func isGo(workdir string) bool {
-	return fileExists(workdir, "go.mod")
 }

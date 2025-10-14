@@ -15,6 +15,14 @@ type NodeProject struct {
 	workdir string
 }
 
+func (p *NodeProject) versionFile() string {
+	return path.Join(p.workdir, "package.json")
+}
+
+func isNode(workdir string) bool {
+	return fileExists(path.Join(workdir, "package.json"))
+}
+
 func (p *NodeProject) IsMe(workdir string) bool {
 	return isNode(workdir)
 }
@@ -28,19 +36,19 @@ func (p *NodeProject) WorkDir() string {
 }
 
 func (p *NodeProject) GetVersion() (*version.Version, error) {
-	versionFile := path.Join(p.workdir, "package.json")
+	versionFile := p.versionFile()
 	fp, err := os.Open(versionFile)
 	if err != nil {
 		return nil, err
 	}
 	defer fp.Close()
 
-	scaner := bufio.NewScanner(fp)
+	scanner := bufio.NewScanner(fp)
 
 	versionRE := regexp.MustCompile(`^\s*"version"\s*:\s*"(.+)"`)
 
-	for scaner.Scan() {
-		if m := versionRE.FindSubmatch(scaner.Bytes()); m != nil {
+	for scanner.Scan() {
+		if m := versionRE.FindSubmatch(scanner.Bytes()); m != nil {
 			return version.Parse(string(m[1])), nil
 		}
 	}
@@ -48,19 +56,19 @@ func (p *NodeProject) GetVersion() (*version.Version, error) {
 }
 
 func (p *NodeProject) SetVersion(v *version.Version) error {
-	versionFile := path.Join(p.workdir, "package.json")
+	versionFile := p.versionFile()
 	fp, err := os.Open(versionFile)
 	if err != nil {
 		return err
 	}
 
-	scaner := bufio.NewScanner(fp)
+	scanner := bufio.NewScanner(fp)
 
 	versionRE := regexp.MustCompile(`^\s*"version"\s*:\s*"(.+)"`)
 
 	buf := make([]byte, 0, 1024)
-	for scaner.Scan() {
-		line := scaner.Bytes()
+	for scanner.Scan() {
+		line := scanner.Bytes()
 		if m := versionRE.FindSubmatch(line); m != nil {
 			newVersion := bytes.Replace(line, m[1], []byte(v.String()), 1)
 			buf = append(buf, newVersion...)

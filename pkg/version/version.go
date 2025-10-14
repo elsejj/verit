@@ -6,6 +6,12 @@ import (
 	"strings"
 )
 
+// Special constants indicating should keep current version
+const KEEP = -2
+
+// / Special constants indicating should increase current version by 1
+const INCREASE = -1
+
 type Version struct {
 	Major int
 	Minor int
@@ -47,19 +53,31 @@ func (v *Version) FullVersion() string {
 	return fmt.Sprintf("%d.%d.%d.%s", v.Major, v.Minor, v.Patch, v.Build)
 }
 
-func (v *Version) BumpMajor() {
-	v.Major++
+func (v *Version) BumpMajor(ver int) {
+	if ver == INCREASE {
+		v.Major++
+	} else if ver != KEEP && ver >= 0 {
+		v.Major = ver
+	}
 	v.Minor = 0
 	v.Patch = 0
 }
 
-func (v *Version) BumpMinor() {
-	v.Minor++
+func (v *Version) BumpMinor(ver int) {
+	if ver == INCREASE {
+		v.Minor++
+	} else if ver != KEEP && ver >= 0 {
+		v.Minor = ver
+	}
 	v.Patch = 0
 }
 
-func (v *Version) BumpPatch() {
-	v.Patch++
+func (v *Version) BumpPatch(ver int) {
+	if ver == INCREASE {
+		v.Patch++
+	} else if ver != KEEP && ver >= 0 {
+		v.Patch = ver
+	}
 }
 
 func (v *Version) GreaterThan(v2 *Version) bool {

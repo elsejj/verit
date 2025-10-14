@@ -6,6 +6,7 @@ const (
 	Python = ProjectID(iota + 10)
 	Go
 	Node
+	Rust
 )
 
 type ProjectID int
@@ -18,6 +19,8 @@ func (p ProjectID) String() string {
 		return "Go"
 	case Node:
 		return "Node"
+	case Rust:
+		return "Rust"
 	default:
 		return "Unknown"
 	}
@@ -31,6 +34,8 @@ func ParseProjectID(s string) ProjectID {
 		return Go
 	case "node":
 		return Node
+	case "rust":
+		return Rust
 	default:
 		return 0
 	}
