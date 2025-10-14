@@ -1,9 +1,20 @@
-BIN_NAME=verit
 
-build:
-	CGO_ENABLED=0 go build -o dist/$(BIN_NAME) -ldflags "-s -w" main.go
+APP_NAME=verit
+DIST_DIR=dist
 
+local:
+	go build -o $(DIST_DIR)/$(APP_NAME) main.go
 
-tiny:
-	tinygo build -o dist/$(BIN_NAME) main.go
-	strip dist/$(BIN_NAME)
+all: linux windows darwin
+
+linux:
+	GOOS=linux GOARCH=amd64 go build -o $(DIST_DIR)/linux/$(APP_NAME) main.go
+	tar -czf $(DIST_DIR)/linux/$(APP_NAME)-linux-amd64.tar.gz -C $(DIST_DIR)/linux $(APP_NAME)
+
+windows:
+	GOOS=windows GOARCH=amd64 go build -o $(DIST_DIR)/win/$(APP_NAME).exe main.go
+	zip -r -j $(DIST_DIR)/win/$(APP_NAME)-windows-amd64.zip $(DIST_DIR)/win/$(APP_NAME).exe
+
+darwin:
+	GOOS=darwin GOARCH=arm64 go build -o $(DIST_DIR)/mac/$(APP_NAME) main.go
+	tar -czf $(DIST_DIR)/mac/$(APP_NAME)-darwin-arm64.tar.gz -C $(DIST_DIR)/mac $(APP_NAME)
