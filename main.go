@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"os/exec"
+	"strings"
 
 	flag "github.com/spf13/pflag"
 
@@ -20,6 +23,8 @@ var flagBumpMinor string
 var flagBumpPatch string
 var flagHelp bool
 var flagVerbose bool
+var flagGitTag bool
+var flagGitTagPush bool
 
 //go:embed version.txt
 var ver string
@@ -42,12 +47,18 @@ func initFlags() {
 
 	flag.StringVarP(&flagSetVersion, "version", "v", "", "version to set, like 1.2.3")
 	flag.BoolVarP(&flagAppVersion, "app-version", "V", false, "show app version")
+	flag.BoolVarP(&flagGitTag, "tag", "t", false, "create git tag using current version")
+	flag.BoolVarP(&flagGitTagPush, "tag-push", "T", false, "create git tag and push it with --force")
 
 	flag.Lookup("major").NoOptDefVal = "INC"
 	flag.Lookup("minor").NoOptDefVal = "INC"
 	flag.Lookup("patch").NoOptDefVal = "INC"
 
 	flag.Parse()
+
+	if flagGitTagPush {
+		flagGitTag = true
+	}
 }
 
 func main() {
@@ -93,6 +104,13 @@ func main() {
 			}
 		}
 	}
+	if flagGitTag {
+		if err := createGitTag(p); err != nil {
+			fmt.Println(err)
+			return
+		}
+	}
+
 	showVersion(p)
 }
 
@@ -168,6 +186,68 @@ func setVersion(p projectid.Project, v *version.Version) {
 	if flagVerbose {
 		fmt.Printf("'%s' project in '%s' set to version '%s'\n", p.ID(), p.WorkDir(), v)
 	}
+}
+
+func createGitTag(p projectid.Project) error {
+	v, err := p.GetVersion()
+	if err != nil {
+		return fmt.Errorf("resolve version before tagging failed: %w", err)
+	}
+
+	if err := ensureCleanGit(p.WorkDir()); err != nil {
+		return err
+	}
+
+	tagName := "v" + v.String()
+	if err := runGit(p.WorkDir(), "tag", tagName); err != nil {
+		return err
+	}
+
+	if flagGitTagPush {
+		if err := runGit(p.WorkDir(), "push", "--force", "origin", tagName); err != nil {
+			return err
+		}
+	}
+
+	if flagVerbose {
+		if flagGitTagPush {
+			fmt.Printf("created and pushed tag '%s'\n", tagName)
+		} else {
+			fmt.Printf("created tag '%s'\n", tagName)
+		}
+	}
+	return nil
+}
+
+func ensureCleanGit(dir string) error {
+	cmd := exec.Command("git", "status", "--porcelain")
+	cmd.Dir = dir
+	out, err := cmd.Output()
+	if err != nil {
+		if ee, ok := err.(*exec.ExitError); ok {
+			return fmt.Errorf("git status failed: %s", strings.TrimSpace(string(ee.Stderr)))
+		}
+		return fmt.Errorf("git status failed: %w", err)
+	}
+
+	if len(bytes.TrimSpace(out)) > 0 {
+		return fmt.Errorf("git working tree has uncommitted changes")
+	}
+	return nil
+}
+
+func runGit(dir string, args ...string) error {
+	cmd := exec.Command("git", args...)
+	cmd.Dir = dir
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		msg := strings.TrimSpace(string(out))
+		if msg != "" {
+			return fmt.Errorf("git %s failed: %s", strings.Join(args, " "), msg)
+		}
+		return fmt.Errorf("git %s failed: %w", strings.Join(args, " "), err)
+	}
+	return nil
 }
 
 func showVersion(p projectid.Project) {
