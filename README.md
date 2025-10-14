@@ -1,47 +1,53 @@
 # manage project version
 
-this tool is used to manage project version, it can read/write version from project file, it can also bump version in project file.
+this tool is used to manage project version, it can read/write version from project file, and do bump version, create git tag etc.
 
 # Usage
 
-## show project version
+## Show project version
 
 ```bash
-$ verit
+verit
 ```
 
-## bump project version
+## Bump project version
 
 ```bash
 # bump major version
-$ verit -M
+verit -M
 # bump minor version
-$ verit -m
+verit -m
 # bump patch version
-$ verit -p
+verit -p
 ```
 
-## bump to specific version
+## Bump to specific version
 
 ```bash
 # bump major version to 2
-$ verit -M=2
+verit -M=2
 # bump minor version to 3
-$ verit -m=3
+verit -m=3
 # bump patch version to 4
-$ verit -p=4
+verit -p=4
 ```
 
-## set project version
+## Set project version
 
 ```bash
-$ verit -V 1.2.3
+verit -V 1.2.3
 ```
 
-## show project version
+## Create git tag with current version
 
 ```bash
-$ verit
+verit -t
+```
+
+## Create git tag with current version and push to remote
+
+```bash
+verit -T
 ```
 
 # Implementation
