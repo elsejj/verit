@@ -17,7 +17,7 @@ When a bump is requested, it also tags the current commit in git with the new ve
 
 ## Project Structure & Module Organization
 
-`main.go` houses the CLI entrypoint and wires subpackages together.
+`main.go` houses the CLI entrypoint and wires sub packages together.
 Core logic for detecting project types lives in `pkg/projectid`, with language-specific detectors in `p_go.go`, `p_python.go`, and `p_node.go`.
 Each project type implements the `Project` interface defined in `pkg/projectid/projectid.go`.
 Shared version helpers reside in `pkg/version`.
@@ -28,7 +28,6 @@ Go builds deposit binaries into `dist/`, while `internal/version/version.go` sto
 - `make build`: runs `go build` with stripped symbols and writes `dist/verit`. Use after code changes to confirm a reproducible binary.
 - `make tiny`: compiles with TinyGo and strips the artifact for minimal size; keep it green before publishing lightweight releases.
 - `go test ./...`: executes all Go unit tests; add it to your local pre-push workflow even though the suite is currently sparse.
-- `go run . -v 1.2.3`: convenient for smoke-testing CLI flags without creating a binary.
 
 ## Coding Style & Naming Conventions
 
@@ -40,8 +39,4 @@ Place tests in the same package with `_test.go` suffixes and prefer table-driven
 
 ## Commit & Pull Request Guidelines
 
-History favors short, imperative commit messages (e.g., `add code`, `rm dist`). Continue that style and limit each commit to one logical change. PRs should describe the intent, list validation steps (`make build`, `go test ./...`), and reference related issues. Include CLI output or screenshots when UX behavior changes, and call out any manual steps for regenerating `internal/version/version.go`.
-
-## Version Management Workflow
-
-Avoid editing `internal/version/version.go` directly; rely on the CLI to bump versions and regenerate metadata. After updating downstream project files (such as `pyproject.toml` or `package.json`), rerun the tool to ensure consistency before submitting your change.
+History favors short, imperative commit messages (e.g., `add code`, `rm dist`). Continue that style and limit each commit to one logical change. PRs should describe the intent, list validation steps (`make build`, `go test ./...`), and reference related issues.
