@@ -7,6 +7,7 @@ const (
 	Python
 	Go
 	Node
+	Flutter
 	Rust
 	MaxProjectID
 )
@@ -23,6 +24,8 @@ func (p ProjectID) String() string {
 		return "Go"
 	case Node:
 		return "Node"
+	case Flutter:
+		return "Flutter"
 	case Rust:
 		return "Rust"
 	default:
@@ -40,6 +43,8 @@ func ParseProjectID(s string) ProjectID {
 		return Go
 	case "node":
 		return Node
+	case "flutter":
+		return Flutter
 	case "rust":
 		return Rust
 	default:
@@ -65,6 +70,10 @@ func (p ProjectID) Project(workdir string) Project {
 		}
 	case Node:
 		return &NodeProject{
+			workdir: workdir,
+		}
+	case Flutter:
+		return &FlutterProject{
 			workdir: workdir,
 		}
 	case Rust:

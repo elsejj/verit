@@ -34,6 +34,16 @@ version = "1.2.3"
 			expected: Node,
 		},
 		{
+			name: "flutter only",
+			files: map[string]string{
+				"pubspec.yaml": `
+name: demo
+version: 1.2.3+4
+`,
+			},
+			expected: Flutter,
+		},
+		{
 			name: "python and node",
 			files: map[string]string{
 				"pyproject.toml": `
@@ -113,6 +123,39 @@ version = "1.2.3"
 	if _, err := project.GetVersion(); err == nil {
 		t.Fatalf("expected error for mismatched versions")
 	}
+}
+
+func TestFlutterProjectVersionOperations(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, dir, "pubspec.yaml", `
+name: demo
+version: 1.2.3+4
+`)
+
+	project := Flutter.Project(dir)
+	if project == nil {
+		t.Fatalf("expected Flutter project, got nil")
+	}
+
+	v, err := project.GetVersion()
+	if err != nil {
+		t.Fatalf("get version: %v", err)
+	}
+	if v.Major != 1 || v.Minor != 2 || v.Patch != 3 || v.Build != "4" {
+		t.Fatalf("unexpected version: %+v", v)
+	}
+
+	newVersion, err := version.Parse("1.2.4")
+	if err != nil {
+		t.Fatalf("parse version: %v", err)
+	}
+	newVersion.Build = "5"
+
+	if err := project.SetVersion(newVersion); err != nil {
+		t.Fatalf("set version: %v", err)
+	}
+
+	assertFileContains(t, filepath.Join(dir, "pubspec.yaml"), `version: 1.2.4+5`)
 }
 
 func writeFile(t *testing.T, dir, name, content string) {
