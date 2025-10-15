@@ -30,6 +30,10 @@ verit -M=2
 verit -m=3
 # bump patch version to 4
 verit -p=4
+# set prerelease version
+verit -r alpha.1
+# set build metadata
+verit -b 001
 ```
 
 ## Set project version
