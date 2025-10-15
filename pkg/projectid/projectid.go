@@ -6,6 +6,20 @@ import (
 	"github.com/elsejj/verit/pkg/version"
 )
 
+var projectDetectionOrder = []ProjectID{
+	Python,
+	Go,
+	Node,
+	Rust,
+}
+
+var projectCheckers = map[ProjectID]func(string) bool{
+	Node:   isNode,
+	Python: isPython,
+	Go:     isGo,
+	Rust:   isRust,
+}
+
 // Project represents a generic project with versioning capabilities
 type Project interface {
 	// Test if the project is of the specified type
@@ -28,16 +42,22 @@ func Pwd() string {
 
 // Which returns the type of project in current directory
 func Which(workdir string) ProjectID {
-	checkers := map[ProjectID]func(string) bool{
-		Node:   isNode,
-		Python: isPython,
-		Go:     isGo,
+	var matches []ProjectID
+	for _, id := range projectDetectionOrder {
+		checker, ok := projectCheckers[id]
+		if !ok {
+			continue
+		}
+		if checker(workdir) {
+			matches = append(matches, id)
+		}
 	}
 
-	for id, checker := range checkers {
-		if checker(workdir) {
-			return id
-		}
+	if len(matches) > 1 {
+		return Multiple
+	}
+	if len(matches) == 1 {
+		return matches[0]
 	}
 	return 0
 }

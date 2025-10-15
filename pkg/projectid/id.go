@@ -3,16 +3,20 @@ package projectid
 import "strings"
 
 const (
-	Python = ProjectID(iota + 10)
+	Multiple = ProjectID(iota + 10)
+	Python
 	Go
 	Node
 	Rust
+	MaxProjectID
 )
 
 type ProjectID int
 
 func (p ProjectID) String() string {
 	switch p {
+	case Multiple:
+		return "Multiple"
 	case Python:
 		return "Python"
 	case Go:
@@ -28,6 +32,8 @@ func (p ProjectID) String() string {
 
 func ParseProjectID(s string) ProjectID {
 	switch strings.ToLower(s) {
+	case "multiple":
+		return Multiple
 	case "python":
 		return Python
 	case "go":
@@ -43,6 +49,12 @@ func ParseProjectID(s string) ProjectID {
 
 func (p ProjectID) Project(workdir string) Project {
 	switch p {
+	case Multiple:
+		m := &MultipleProject{
+			workdir: workdir,
+		}
+		m.scanProjects()
+		return m
 	case Python:
 		return &PythonProject{
 			workdir: workdir,
@@ -53,6 +65,10 @@ func (p ProjectID) Project(workdir string) Project {
 		}
 	case Node:
 		return &NodeProject{
+			workdir: workdir,
+		}
+	case Rust:
+		return &RustProject{
 			workdir: workdir,
 		}
 	default:
