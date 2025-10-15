@@ -13,13 +13,14 @@ import (
 	_ "embed"
 )
 
-var flagBuild string
 var flagWorkDir string
 var flagSetVersion string
 var flagAppVersion bool
 var flagBumpMajor string
 var flagBumpMinor string
 var flagBumpPatch string
+var flagSetBuild string
+var flagSetPrerelease string
 var flagHelp bool
 var flagVerbose bool
 var flagGitTag bool
@@ -38,7 +39,9 @@ func initFlags() {
 
 	flag.StringVarP(&flagBumpPatch, "patch", "p", "KEEP", "bump patch version, no argument value to increase current patch by 1")
 
-	flag.StringVarP(&flagBuild, "build", "b", "", "set build version")
+	flag.StringVarP(&flagSetBuild, "build", "b", "", "set build version")
+
+	flag.StringVarP(&flagSetPrerelease, "prerelease", "r", "", "set prerelease version")
 
 	flag.StringVarP(&flagWorkDir, "work-dir", "w", "", "work directory of the project, default to current directory")
 
@@ -93,10 +96,6 @@ func main() {
 		setVersion(p, v)
 	} else {
 		changed := bumpVersion(p)
-		if len(flagBuild) > 0 {
-			changed = true
-			setBuildVersion(p)
-		}
 		if changed {
 			if flagVerbose {
 				fmt.Println("version changed")
@@ -147,25 +146,40 @@ func bumpVersion(p projectid.Project) bool {
 		v = &version.Version{}
 	}
 
+	changed := false
+
 	major, err := version.ParseVersionNumber(flagBumpMajor)
 	if err != nil {
 		fmt.Println("invalid major version:", err)
 		return false
 	}
+	changed = changed || (major != version.KEEP)
 
 	minor, err := version.ParseVersionNumber(flagBumpMinor)
 	if err != nil {
 		fmt.Println("invalid minor version:", err)
 		return false
 	}
+	changed = changed || (minor != version.KEEP)
 
 	patch, err := version.ParseVersionNumber(flagBumpPatch)
 	if err != nil {
 		fmt.Println("invalid patch version:", err)
 		return false
 	}
+	changed = changed || (patch != version.KEEP)
 
-	if major == version.KEEP && minor == version.KEEP && patch == version.KEEP {
+	if len(flagSetPrerelease) > 0 {
+		v.Prerelease = flagSetPrerelease
+		changed = true
+	}
+
+	if len(flagSetBuild) > 0 {
+		v.Build = flagSetBuild
+		changed = true
+	}
+
+	if !changed {
 		if flagVerbose {
 			fmt.Println("no version change")
 		}
@@ -179,18 +193,6 @@ func bumpVersion(p projectid.Project) bool {
 	setVersion(p, v)
 
 	return true
-}
-
-func setBuildVersion(p projectid.Project) {
-	v, err := p.GetVersion()
-	if err != nil {
-		if flagVerbose {
-			fmt.Println("get version failed", err, "use default version '0.0.0'")
-		}
-		v = &version.Version{}
-	}
-	v.Build = flagBuild
-	setVersion(p, v)
 }
 
 func setVersion(p projectid.Project, v *version.Version) {

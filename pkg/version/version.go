@@ -2,6 +2,7 @@ package version
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -30,11 +31,15 @@ func ParseVersionNumber(s string) (int, error) {
 	}
 }
 
+// see https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string and  https://regex101.com/r/Ly7O1x/3/
+var versionRe = regexp.MustCompile(`^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$`)
+
 type Version struct {
-	Major int
-	Minor int
-	Patch int
-	Build string
+	Major      int
+	Minor      int
+	Patch      int
+	Prerelease string
+	Build      string
 }
 
 func parseInt(s string) int {
@@ -46,35 +51,33 @@ func parseInt(s string) int {
 }
 
 func Parse(s string) (*Version, error) {
-	s = strings.TrimSpace(strings.TrimLeftFunc(s, func(r rune) bool {
-		return r == 'V' || r == 'v'
-	}))
-	a := strings.Split(s, ".")
-	if len(a) < 3 {
-		return nil, fmt.Errorf("`%s` is invalid version format", s)
+	matches := versionRe.FindStringSubmatch(s)
+	if matches == nil {
+		return nil, fmt.Errorf("invalid version string: %s", s)
 	}
-	v := Version{}
-	for i, s := range a {
-		switch i {
-		case 0:
-			v.Major = parseInt(s)
-		case 1:
-			v.Minor = parseInt(s)
-		case 2:
-			v.Patch = parseInt(s)
-		case 3:
-			v.Build = s
-		}
+
+	v := Version{
+		Major:      parseInt(matches[1]),
+		Minor:      parseInt(matches[2]),
+		Patch:      parseInt(matches[3]),
+		Prerelease: matches[4],
+		Build:      matches[5],
 	}
 	return &v, nil
 }
 
 func (v *Version) String() string {
-	if v.Build != "" {
-		return fmt.Sprintf("%d.%d.%d.%s", v.Major, v.Minor, v.Patch, v.Build)
-	} else {
-		return fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch)
+	b := strings.Builder{}
+	b.WriteString(fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch))
+	if v.Prerelease != "" {
+		b.WriteString("-")
+		b.WriteString(v.Prerelease)
 	}
+	if v.Build != "" {
+		b.WriteString("+")
+		b.WriteString(v.Build)
+	}
+	return b.String()
 }
 
 func (v *Version) BumpMajor(ver int) {
@@ -131,13 +134,23 @@ func (v *Version) GreaterThan(v2 *Version) bool {
 	} else if v.Patch < v2.Patch {
 		return false
 	}
+	if c := strings.Compare(v.Prerelease, v2.Prerelease); c > 0 {
+		return true
+	} else if c < 0 {
+		return false
+	}
+	if c := strings.Compare(v.Build, v2.Build); c > 0 {
+		return true
+	} else if c < 0 {
+		return false
+	}
 	return false
 }
 
 func (v *Version) LessThan(v2 *Version) bool {
-	return !v.GreaterThan(v2)
+	return v2.GreaterThan(v)
 }
 
 func (v *Version) Equal(v2 *Version) bool {
-	return v.Major == v2.Major && v.Minor == v2.Minor && v.Patch == v2.Patch
+	return v.Major == v2.Major && v.Minor == v2.Minor && v.Patch == v2.Patch && v.Prerelease == v2.Prerelease && v.Build == v2.Build
 }
