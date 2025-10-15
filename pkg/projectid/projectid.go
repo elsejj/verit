@@ -56,7 +56,7 @@ func Which(workdir string) ProjectID {
 	}
 
 	if len(matches) > 1 {
-		return Multiple
+		return Mix
 	}
 	if len(matches) == 1 {
 		return matches[0]

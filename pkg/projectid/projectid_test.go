@@ -9,7 +9,7 @@ import (
 	"github.com/elsejj/verit/pkg/version"
 )
 
-func TestWhichDetectsMultipleProjects(t *testing.T) {
+func TestWhichDetectsMixProjects(t *testing.T) {
 	tests := []struct {
 		name     string
 		files    map[string]string
@@ -53,7 +53,7 @@ version = "1.2.3"
 `,
 				"package.json": `{"name":"demo","version":"1.2.3"}`,
 			},
-			expected: Multiple,
+			expected: Mix,
 		},
 	}
 
@@ -71,7 +71,7 @@ version = "1.2.3"
 	}
 }
 
-func TestMultipleProjectVersionOperations(t *testing.T) {
+func TestMixProjectVersionOperations(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, dir, "pyproject.toml", `
 [tool.poetry]
@@ -80,9 +80,9 @@ version = "1.2.3"
 `)
 	writeFile(t, dir, "package.json", `{"name":"demo","version":"1.2.3"}`)
 
-	project := Multiple.Project(dir)
+	project := Mix.Project(dir)
 	if project == nil {
-		t.Fatalf("expected Multiple project, got nil")
+		t.Fatalf("expected Mix project, got nil")
 	}
 
 	v, err := project.GetVersion()
@@ -106,7 +106,7 @@ version = "1.2.3"
 	assertFileContains(t, filepath.Join(dir, "package.json"), `"version":"1.2.4"`)
 }
 
-func TestMultipleProjectMismatchedVersions(t *testing.T) {
+func TestMixProjectMismatchedVersions(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, dir, "pyproject.toml", `
 [tool.poetry]
@@ -115,9 +115,9 @@ version = "1.2.3"
 `)
 	writeFile(t, dir, "package.json", `{"name":"demo","version":"1.2.4"}`)
 
-	project := Multiple.Project(dir)
+	project := Mix.Project(dir)
 	if project == nil {
-		t.Fatalf("expected Multiple project, got nil")
+		t.Fatalf("expected Mix project, got nil")
 	}
 
 	if _, err := project.GetVersion(); err == nil {

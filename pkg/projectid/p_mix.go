@@ -6,18 +6,18 @@ import (
 	"github.com/elsejj/verit/pkg/version"
 )
 
-type MultipleProject struct {
+type MixProject struct {
 	workdir  string
 	projects []Project
 }
 
-func (p *MultipleProject) scanProjects() []Project {
+func (p *MixProject) scanProjects() []Project {
 	if p.projects != nil {
 		return p.projects
 	}
 
 	for _, id := range projectDetectionOrder {
-		if id == Multiple {
+		if id == Mix {
 			continue
 		}
 		checker, ok := projectCheckers[id]
@@ -33,22 +33,22 @@ func (p *MultipleProject) scanProjects() []Project {
 	return p.projects
 }
 
-func (p *MultipleProject) IsMe(workdir string) bool {
+func (p *MixProject) IsMe(workdir string) bool {
 	if workdir != p.workdir {
 		return false
 	}
 	return len(p.scanProjects()) > 1
 }
 
-func (p *MultipleProject) ID() ProjectID {
-	return Multiple
+func (p *MixProject) ID() ProjectID {
+	return Mix
 }
 
-func (p *MultipleProject) WorkDir() string {
+func (p *MixProject) WorkDir() string {
 	return p.workdir
 }
 
-func (p *MultipleProject) GetVersion() (*version.Version, error) {
+func (p *MixProject) GetVersion() (*version.Version, error) {
 	if len(p.projects) == 0 {
 		return nil, fmt.Errorf("no supported projects detected in %s", p.workdir)
 	}
@@ -74,7 +74,7 @@ func (p *MultipleProject) GetVersion() (*version.Version, error) {
 	return current, nil
 }
 
-func (p *MultipleProject) SetVersion(v *version.Version) error {
+func (p *MixProject) SetVersion(v *version.Version) error {
 	if len(p.projects) == 0 {
 		return fmt.Errorf("no supported projects detected in %s", p.workdir)
 	}
@@ -88,4 +88,4 @@ func (p *MultipleProject) SetVersion(v *version.Version) error {
 	return nil
 }
 
-var _ Project = &MultipleProject{}
+var _ Project = &MixProject{}

@@ -12,7 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Check CHANGELOG.md if exists had updated for current release when creating a new release.
-- Support multiple project types in a single repository. For example, a pyo3 project with both Rust and Python code.
+- Support mix project types in a single repository. For example, a pyo3 project with both Rust and Python code.
+- Add `-b` to set build metadata.
+- Add `-r` to set prerelease version.
 
 ## [0.2.0] - 2025-10-14
 

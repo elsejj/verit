@@ -3,7 +3,7 @@ package projectid
 import "strings"
 
 const (
-	Multiple = ProjectID(iota + 10)
+	Mix = ProjectID(iota + 10)
 	Python
 	Go
 	Node
@@ -16,8 +16,8 @@ type ProjectID int
 
 func (p ProjectID) String() string {
 	switch p {
-	case Multiple:
-		return "Multiple"
+	case Mix:
+		return "Mix"
 	case Python:
 		return "Python"
 	case Go:
@@ -35,8 +35,8 @@ func (p ProjectID) String() string {
 
 func ParseProjectID(s string) ProjectID {
 	switch strings.ToLower(s) {
-	case "multiple":
-		return Multiple
+	case "mix":
+		return Mix
 	case "python":
 		return Python
 	case "go":
@@ -54,8 +54,8 @@ func ParseProjectID(s string) ProjectID {
 
 func (p ProjectID) Project(workdir string) Project {
 	switch p {
-	case Multiple:
-		m := &MultipleProject{
+	case Mix:
+		m := &MixProject{
 			workdir: workdir,
 		}
 		m.scanProjects()
