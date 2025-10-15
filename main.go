@@ -5,6 +5,7 @@ import (
 
 	flag "github.com/spf13/pflag"
 
+	"github.com/elsejj/verit/internal/changelog"
 	"github.com/elsejj/verit/internal/git"
 	"github.com/elsejj/verit/pkg/projectid"
 	"github.com/elsejj/verit/pkg/version"
@@ -103,6 +104,15 @@ func main() {
 		}
 	}
 	if flagGitTag {
+		v, err := p.GetVersion()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		if !changelog.EnsureUpdated(workdir, v.String()) {
+			fmt.Println("changelog not updated for version", v)
+			return
+		}
 		tagName, err := git.CreateTag(p, flagGitTagPush)
 		if err != nil {
 			fmt.Println(err)
