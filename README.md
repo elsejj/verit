@@ -56,7 +56,7 @@ for some language project, it has its own way to manage version, `verit` will us
 
 for some language project, it has no way to manage version, `verit` will do it for you.
 
-# Go Project
+## Go Project
 
 For go project, `verit` will lookup `version.txt` file to manage version, if not exist, will give up.
 if you want to use `verit` to manage go project version, you need to create a `version.txt` and put version like `1.2.3` in it. then use `go:embed` directive to embed it to a go variable.
@@ -76,19 +76,19 @@ func main() {
 }
 ```
 
-# Python Project
+## Python Project
 
 for python project, `verit` will use `pyproject.toml` to manage version,
 
-# Node Project
+## Node Project
 
 for node project, `verit` will use `package.json` to manage version,
 
-# Flutter Project
+## Flutter Project
 
 for flutter project, `verit` will use the `version` field in `pubspec.yaml`. the value should follow `x.y.z` with an optional `+build` suffix. when bumping or setting the version, `verit` keeps the build number if provided and writes updates back to `pubspec.yaml`.
 
-# Rust Project
+## Rust Project
 
 for rust project, `verit` will use `Cargo.toml` to manage version,
 
@@ -115,6 +115,6 @@ name = "crate1"
 version.workspace = true
 ```
 
-# Multiple Projects
+## Multiple Projects
 
-when multiple supported project files are present (for example, `pyproject.toml` and `package.json` together), `verit` treats the workspace as a single project and applies operations to each manifest. all detected manifests must share the same version before a bump is performed, ensuring the versions stay aligned across languages.
+when multiple supported project files are present (for example, `pyproject.toml` and `Cargo.toml` together, a typical `Maturin` project, use `pyo3` build python native extensions), `verit` treats the workspace as a single project and applies operations to each manifest. all detected manifests must share the same version before a bump is performed, ensuring the versions stay aligned across languages.
