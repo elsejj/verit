@@ -84,6 +84,10 @@ for python project, `verit` will use `pyproject.toml` to manage version,
 
 for node project, `verit` will use `package.json` to manage version,
 
+# Flutter Project
+
+for flutter project, `verit` will use the `version` field in `pubspec.yaml`. the value should follow `x.y.z` with an optional `+build` suffix. when bumping or setting the version, `verit` keeps the build number if provided and writes updates back to `pubspec.yaml`.
+
 # Rust Project
 
 for rust project, `verit` will use `Cargo.toml` to manage version,
@@ -110,3 +114,7 @@ then in each crate `Cargo.toml`, you can inherit the version from workspace, lik
 name = "crate1"
 version.workspace = true
 ```
+
+# Multiple Projects
+
+when multiple supported project files are present (for example, `pyproject.toml` and `package.json` together), `verit` treats the workspace as a single project and applies operations to each manifest. all detected manifests must share the same version before a bump is performed, ensuring the versions stay aligned across languages.
