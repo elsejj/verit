@@ -91,6 +91,8 @@ func (v *Version) BumpMajor(ver int) {
 	}
 	v.Minor = 0
 	v.Patch = 0
+	v.Build = ""
+	v.Prerelease = ""
 }
 
 func (v *Version) BumpMinor(ver int) {
@@ -103,6 +105,8 @@ func (v *Version) BumpMinor(ver int) {
 		v.Minor = ver
 	}
 	v.Patch = 0
+	v.Build = ""
+	v.Prerelease = ""
 }
 
 func (v *Version) BumpPatch(ver int) {
@@ -114,6 +118,8 @@ func (v *Version) BumpPatch(ver int) {
 	} else if ver >= 0 {
 		v.Patch = ver
 	}
+	v.Build = ""
+	v.Prerelease = ""
 }
 
 func (v *Version) GreaterThan(v2 *Version) bool {

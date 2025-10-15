@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"path"
 	"regexp"
-	"strings"
 
 	"github.com/elsejj/verit/internal/utils"
 	"github.com/elsejj/verit/pkg/version"
@@ -37,35 +36,16 @@ func (p *FlutterProject) WorkDir() string {
 var flutterVersionRE = regexp.MustCompile(`(?m)^\s*version\s*:\s*["']?([^\s"']+)["']?`)
 
 func (p *FlutterProject) GetVersion() (*version.Version, error) {
-	raw, err := utils.Grep(p.versionFile(), flutterVersionRE)
+	v, err := utils.Grep(p.versionFile(), flutterVersionRE)
 	if err != nil {
 		return nil, fmt.Errorf("version not found")
 	}
 
-	base := raw
-	build := ""
-	if idx := strings.Index(base, "+"); idx >= 0 {
-		base = base[:idx]
-		build = raw[idx+1:]
-	}
-
-	v, err := version.Parse(base)
-	if err != nil {
-		return nil, fmt.Errorf("parse version: %w", err)
-	}
-	if build != "" {
-		v.Build = build
-	}
-	return v, nil
+	return version.Parse(v)
 }
 
 func (p *FlutterProject) SetVersion(v *version.Version) error {
-	value := fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch)
-	if v.Build != "" {
-		value = fmt.Sprintf("%s+%s", value, v.Build)
-	}
-
-	return utils.Sed(p.versionFile(), flutterVersionRE, value)
+	return utils.Sed(p.versionFile(), flutterVersionRE, v.String())
 }
 
 var _ Project = &FlutterProject{}

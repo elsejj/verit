@@ -170,12 +170,10 @@ func bumpVersion(p projectid.Project) bool {
 	changed = changed || (patch != version.KEEP)
 
 	if len(flagSetPrerelease) > 0 {
-		v.Prerelease = flagSetPrerelease
 		changed = true
 	}
 
 	if len(flagSetBuild) > 0 {
-		v.Build = flagSetBuild
 		changed = true
 	}
 
@@ -189,6 +187,9 @@ func bumpVersion(p projectid.Project) bool {
 	v.BumpMajor(major)
 	v.BumpMinor(minor)
 	v.BumpPatch(patch)
+
+	v.Prerelease = flagSetPrerelease
+	v.Build = flagSetBuild
 
 	setVersion(p, v)
 
