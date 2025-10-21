@@ -87,6 +87,11 @@ func main() {
 
 	p := id.Project(workdir)
 
+	if p == nil {
+		fmt.Println("unsupported project in", workdir)
+		return
+	}
+
 	if len(flagSetVersion) > 0 {
 		v, err := version.Parse(flagSetVersion)
 		if err != nil {
