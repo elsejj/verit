@@ -4,6 +4,7 @@ DIST_DIR=dist
 
 local:
 	go build -o $(DIST_DIR)/$(APP_NAME) main.go
+	mv $(DIST_DIR)/$(APP_NAME) ~/.local/bin
 
 all: linux windows darwin
 

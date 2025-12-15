@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3] - 2025-12-15
+
+### Added
+
+- Add '-R' option to recursively bump version.
+
+### Fixed
+
+- Fix rust python project version regex
+
 ## [0.2.2] - 2025-10-21
 
 ### Fixed

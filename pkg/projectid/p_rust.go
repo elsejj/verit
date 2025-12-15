@@ -33,7 +33,7 @@ func (p *RustProject) WorkDir() string {
 	return p.workdir
 }
 
-var RustVersionRE = regexp.MustCompile(`\s*version\s*=\s*"(.+)"`)
+var RustVersionRE = regexp.MustCompile(`(?m)^\s*version\s*=\s*"(.+)"`)
 
 func (p *RustProject) GetVersion() (*version.Version, error) {
 	v, err := utils.Grep(p.versionFile(), RustVersionRE)

@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"io/fs"
+	"path/filepath"
+	"strings"
 
 	flag "github.com/spf13/pflag"
 
@@ -25,6 +28,7 @@ var flagHelp bool
 var flagVerbose bool
 var flagGitTag bool
 var flagGitTagPush bool
+var flagRecursive bool
 
 //go:embed version.txt
 var ver string
@@ -44,6 +48,7 @@ func initFlags() {
 	flag.StringVarP(&flagSetPrerelease, "prerelease", "r", "", "set prerelease version")
 
 	flag.StringVarP(&flagWorkDir, "work-dir", "w", "", "work directory of the project, default to current directory")
+	flag.BoolVarP(&flagRecursive, "recursive", "R", false, "recursively bump version")
 
 	flag.BoolVarP(&flagHelp, "help", "h", false, "show help (shorthand)")
 
@@ -83,12 +88,42 @@ func main() {
 		workdir = flagWorkDir
 	}
 
+	processDir(workdir, flagRecursive)
+
+}
+
+func showHelp() {
+	fmt.Println("verit - manage project version")
+	fmt.Println("version:", ver)
+	fmt.Println("usage: verit [options]")
+	fmt.Println("options:")
+	flag.PrintDefaults()
+}
+
+// well known dependencies dir
+var wellknownDependencies = []string{
+	"node_modules",
+	".venv",
+}
+
+func isWellknownDependency(workdir string) bool {
+	for _, d := range wellknownDependencies {
+		if strings.Contains(workdir, d) {
+			return true
+		}
+	}
+	return false
+}
+
+func processDir(workdir string, recursive bool) {
 	id := projectid.Which(workdir)
 
 	p := id.Project(workdir)
 
 	if p == nil {
-		fmt.Println("unsupported project in", workdir)
+		if flagVerbose {
+			fmt.Println("unsupported project in", workdir)
+		}
 		return
 	}
 
@@ -107,6 +142,20 @@ func main() {
 			}
 		}
 	}
+	if recursive {
+		filepath.WalkDir(workdir, func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+			if !d.IsDir() || isWellknownDependency(path) || path == workdir {
+				return nil
+			}
+			processDir(path, false)
+			return nil
+		})
+	}
+
+	// only do git operations in root project
 	if flagGitTag {
 		v, err := p.GetVersion()
 		if err != nil {
@@ -130,25 +179,15 @@ func main() {
 			}
 		}
 	}
-
-	showVersion(p)
-}
-
-func showHelp() {
-	fmt.Println("verit - manage project version")
-	fmt.Println("version:", ver)
-	fmt.Println("usage: verit [options]")
-	fmt.Println("options:")
-	flag.PrintDefaults()
 }
 
 func bumpVersion(p projectid.Project) bool {
 	v, err := p.GetVersion()
 	if err != nil {
 		if flagVerbose {
-			fmt.Println("get version failed", err, "use default version '0.0.0'")
+			fmt.Println("get version failed", err)
 		}
-		v = &version.Version{}
+		return false
 	}
 
 	changed := false
@@ -189,6 +228,7 @@ func bumpVersion(p projectid.Project) bool {
 		return false
 	}
 
+	oldVersion := v.String()
 	v.BumpMajor(major)
 	v.BumpMinor(minor)
 	v.BumpPatch(patch)
@@ -197,6 +237,9 @@ func bumpVersion(p projectid.Project) bool {
 	v.Build = flagSetBuild
 
 	setVersion(p, v)
+	newVersion := v.String()
+
+	fmt.Println(p.ID().String(), "project in", p.WorkDir(), "bumped from", oldVersion, "to", newVersion)
 
 	return true
 }
@@ -204,23 +247,13 @@ func bumpVersion(p projectid.Project) bool {
 func setVersion(p projectid.Project, v *version.Version) {
 	err := p.SetVersion(v)
 	if err != nil {
-		fmt.Println(err)
+		if flagVerbose {
+			fmt.Println(err)
+
+		}
 		return
 	}
 	if flagVerbose {
 		fmt.Printf("'%s' project in '%s' set to version '%s'\n", p.ID(), p.WorkDir(), v)
-	}
-}
-
-func showVersion(p projectid.Project) {
-	v, err := p.GetVersion()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	if flagVerbose {
-		fmt.Printf("'%s' project in '%s' version is '%s'\n", p.ID(), p.WorkDir(), v)
-	} else {
-		fmt.Println(v)
 	}
 }
