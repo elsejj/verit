@@ -59,7 +59,7 @@ func (p *MixProject) GetVersion() (*version.Version, error) {
 	for _, sub := range p.projects {
 		v, err := sub.GetVersion()
 		if err != nil {
-			return nil, fmt.Errorf("%s project: %w", sub.ID(), err)
+			continue
 		}
 		if current == nil {
 			current = v

@@ -127,6 +127,15 @@ func processDir(workdir string, recursive bool) {
 		return
 	}
 
+	if flagVerbose {
+		v, err := p.GetVersion()
+		if err != nil {
+			fmt.Println("could not get version:", err)
+			return
+		}
+		fmt.Println(p.ID().String(), "project in", workdir, "with version", v)
+	}
+
 	if len(flagSetVersion) > 0 {
 		v, err := version.Parse(flagSetVersion)
 		if err != nil {

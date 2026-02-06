@@ -7,19 +7,19 @@ import (
 )
 
 var projectDetectionOrder = []ProjectID{
+	Rust,
 	Python,
 	Go,
 	Node,
 	Flutter,
-	Rust,
 }
 
 var projectCheckers = map[ProjectID]func(string) bool{
+	Rust:    isRust,
 	Node:    isNode,
 	Python:  isPython,
 	Go:      isGo,
 	Flutter: isFlutter,
-	Rust:    isRust,
 }
 
 // Project represents a generic project with versioning capabilities
