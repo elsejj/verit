@@ -70,6 +70,9 @@ func (p *MixProject) GetVersion() (*version.Version, error) {
 			return nil, fmt.Errorf("version mismatch between %s and %s projects", currentID, sub.ID())
 		}
 	}
+	if current == nil {
+		return nil, fmt.Errorf("could not get version from any sub-projects")
+	}
 
 	return current, nil
 }
