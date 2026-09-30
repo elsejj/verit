@@ -28,6 +28,7 @@ var flagHelp bool
 var flagVerbose bool
 var flagGitTag bool
 var flagGitTagPush bool
+var flagGitRemote string
 var flagRecursive bool
 
 //go:embed version.txt
@@ -56,6 +57,7 @@ func initFlags() {
 	flag.BoolVarP(&flagAppVersion, "app-version", "V", false, "show app version")
 	flag.BoolVarP(&flagGitTag, "tag", "t", false, "create git tag using current version")
 	flag.BoolVarP(&flagGitTagPush, "tag-push", "T", false, "create git tag and push it with --force")
+	flag.StringVarP(&flagGitRemote, "git-remote", "e", "", "the git remote name used to push")
 
 	flag.Lookup("major").NoOptDefVal = "INC"
 	flag.Lookup("minor").NoOptDefVal = "INC"
@@ -175,7 +177,7 @@ func processDir(workdir string, recursive bool) {
 			fmt.Println("changelog not updated for version", v)
 			return
 		}
-		tagName, err := git.CreateTag(p, flagGitTagPush)
+		tagName, err := git.CreateTag(p, flagGitTagPush, flagGitRemote)
 		if err != nil {
 			fmt.Println(err)
 			return

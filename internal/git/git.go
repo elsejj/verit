@@ -97,7 +97,7 @@ func ensurePushed(dir string) error {
 }
 
 // CreateTag writes a git tag for the project's current version and optionally pushes it.
-func CreateTag(p projectid.Project, push bool) (string, error) {
+func CreateTag(p projectid.Project, push bool, remote string) (string, error) {
 	v, err := p.GetVersion()
 	if err != nil {
 		return "", fmt.Errorf("resolve version before tagging failed: %w", err)
@@ -113,7 +113,7 @@ func CreateTag(p projectid.Project, push bool) (string, error) {
 	}
 
 	if push {
-		if err := Run(p.WorkDir(), "push", "--tags", "--force"); err != nil {
+		if err := Run(p.WorkDir(), "push", remote, "--tags", "--force"); err != nil {
 			return "", err
 		}
 	}
